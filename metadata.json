@@ -1,0 +1,7 @@
+{
+  "name": "SmartCloset AI",
+  "description": "AI 智能衣橱助手。数字化您的衣橱，获取基于天气的每日穿搭建议。",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
