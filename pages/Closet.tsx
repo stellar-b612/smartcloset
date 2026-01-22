@@ -1,6 +1,7 @@
+
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Upload, Link as LinkIcon, X, Loader2, Camera, Check, ArrowRight } from 'lucide-react';
+import { Plus, Search, Upload, Link as LinkIcon, X, Loader2, Camera, Check, ArrowRight, Tag } from 'lucide-react';
 import { ClothingItem, Category, SavedOutfit, Season } from '../types';
 import ClothingCard from '../components/ClothingCard';
 import { analyzeClothingImage, fileToGenerativePart } from '../services/geminiService';
@@ -12,6 +13,8 @@ interface Props {
   addItem: (item: ClothingItem) => void;
   addOutfit: (outfit: SavedOutfit) => void;
 }
+
+const OCCASIONS = ['casual', 'work', 'party', 'date', 'sport', 'travel', 'home'];
 
 const Closet: React.FC<Props> = ({ closet, outfits, addItem, addOutfit }) => {
   const navigate = useNavigate();
@@ -28,11 +31,13 @@ const Closet: React.FC<Props> = ({ closet, outfits, addItem, addOutfit }) => {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkInput, setLinkInput] = useState('');
+  const [tempShopLink, setTempShopLink] = useState('');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Create Outfit State
   const [newOutfitName, setNewOutfitName] = useState('');
+  const [newOutfitOccasion, setNewOutfitOccasion] = useState('casual');
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
 
   const { t, language } = useLanguage();
@@ -58,9 +63,19 @@ const Closet: React.FC<Props> = ({ closet, outfits, addItem, addOutfit }) => {
 
   const urlToBase64 = async (url: string): Promise<string> => {
     try {
-      const response = await fetch(url);
+      // Use wsrv.nl as a reliable CORS proxy for images
+      // We instruct wsrv to output as jpg to ensure format compatibility
+      const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}&output=jpg`;
+      
+      const response = await fetch(proxyUrl);
       if (!response.ok) throw new Error('Network response was not ok');
       const blob = await response.blob();
+      
+      // If the blob is very small or text/html, it failed to be an image
+      if (blob.type.includes('text') || blob.type.includes('html')) {
+          throw new Error("NOT_IMAGE");
+      }
+
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -73,7 +88,7 @@ const Closet: React.FC<Props> = ({ closet, outfits, addItem, addOutfit }) => {
         reader.readAsDataURL(blob);
       });
     } catch (error) {
-      console.warn("Image fetch failed (likely CORS). AI analysis will be skipped.", error);
+      console.warn("Image fetch failed.", error);
       throw error;
     }
   };
@@ -81,21 +96,38 @@ const Closet: React.FC<Props> = ({ closet, outfits, addItem, addOutfit }) => {
   const handleLinkSubmit = async () => {
     if (!linkInput.trim()) return;
     
+    // 1. Check if it looks like a Product Page URL (Taobao/JD) instead of an image
+    // Regex checks for taobao/jd domains AND missing image extension
+    const isEcommercePage = /(taobao\.com|tmall\.com|jd\.com)/i.test(linkInput) && !/\.(jpg|jpeg|png|webp|gif)/i.test(linkInput);
+    
+    if (isEcommercePage) {
+        // Handle as Page URL: Save link, ask for screenshot
+        setTempShopLink(linkInput);
+        setLinkInput('');
+        setShowLinkInput(false);
+        // Show a temporary alert or better UI feedback (using alert for simplicity in this context)
+        alert(t('closet.error.page_url'));
+        // Open file picker automatically
+        setTimeout(() => fileInputRef.current?.click(), 500);
+        return;
+    }
+
     setUploadLoading(true);
     setPreviewUrl(linkInput);
+    setTempShopLink(linkInput);
     
-    // Try to convert to base64 for AI analysis
+    // 2. Try to fetch as Image via Proxy
     try {
         const base64 = await urlToBase64(linkInput);
         setImageBase64(base64);
+        setUploadLoading(false);
+        setShowLinkInput(false);
     } catch (e) {
-        // If CORS fails, we still keep the previewUrl but imageBase64 remains null
-        // We will handle this gracefully in handleAnalyzeAndSave
-        setImageBase64(null);
+        // If fetch fails (likely not an image), revert to screenshot flow
+        setUploadLoading(false);
+        setPreviewUrl(null);
+        alert(t('closet.error.image_fetch'));
     }
-    
-    setUploadLoading(false);
-    setShowLinkInput(false);
   };
 
   const handleAnalyzeAndSave = async () => {
@@ -108,7 +140,6 @@ const Closet: React.FC<Props> = ({ closet, outfits, addItem, addOutfit }) => {
       if (imageBase64) {
          analysis = await analyzeClothingImage(imageBase64, language);
       } else {
-         // Manual defaults for CORS images where we can't get base64
          analysis = {
             description: t('closet.new_item_manual'),
             category: Category.TOP,
@@ -125,6 +156,11 @@ const Closet: React.FC<Props> = ({ closet, outfits, addItem, addOutfit }) => {
         color: analysis.color || 'Unknown',
         season: analysis.season || 'All Year',
         description: analysis.description || 'New Item',
+        brand: analysis.brand,
+        price: analysis.price,
+        material: analysis.material,
+        purchaseDate: new Date().toISOString().split('T')[0],
+        shopLink: tempShopLink || undefined, // Save the link
         ...analysis
       } as ClothingItem;
 
@@ -143,6 +179,7 @@ const Closet: React.FC<Props> = ({ closet, outfits, addItem, addOutfit }) => {
     setImageBase64(null);
     setShowLinkInput(false);
     setLinkInput('');
+    setTempShopLink('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -159,6 +196,7 @@ const Closet: React.FC<Props> = ({ closet, outfits, addItem, addOutfit }) => {
     const newOutfit: SavedOutfit = {
       id: Date.now().toString(),
       name: newOutfitName,
+      occasion: newOutfitOccasion,
       itemIds: selectedItemIds
     };
     addOutfit(newOutfit);
@@ -168,6 +206,7 @@ const Closet: React.FC<Props> = ({ closet, outfits, addItem, addOutfit }) => {
   const closeCreateOutfitModal = () => {
     setIsCreateOutfitModalOpen(false);
     setNewOutfitName('');
+    setNewOutfitOccasion('casual');
     setSelectedItemIds([]);
   };
 
@@ -262,8 +301,13 @@ const Closet: React.FC<Props> = ({ closet, outfits, addItem, addOutfit }) => {
                     </div>
                   ))}
                   {/* Overlay name */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-4">
-                    <h3 className="text-white font-bold text-lg">{outfit.name}</h3>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4">
+                    <h3 className="text-white font-bold text-lg leading-tight">{outfit.name}</h3>
+                    {outfit.occasion && (
+                        <span className="text-white/80 text-xs font-medium bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full self-start mt-1">
+                            {t(`occasion.${outfit.occasion}`)}
+                        </span>
+                    )}
                   </div>
                 </div>
                 <div className="p-3 flex justify-between items-center text-sm text-gray-500">
@@ -333,6 +377,17 @@ const Closet: React.FC<Props> = ({ closet, outfits, addItem, addOutfit }) => {
                       </div>
                   ) : (
                     <div className="space-y-4">
+                      {tempShopLink && (
+                          <div className="bg-green-50 p-3 rounded-xl border border-green-100 flex items-start gap-2">
+                              <Check size={16} className="text-green-600 mt-0.5 shrink-0" />
+                              <div className="text-xs text-green-700">
+                                  <span className="font-bold">{t('closet.link_saved')}</span>
+                                  <br/>
+                                  {t('closet.upload_screenshot')}
+                              </div>
+                          </div>
+                      )}
+                      
                       <button 
                         onClick={() => fileInputRef.current?.click()}
                         className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-violet-500 hover:bg-violet-50 transition-colors text-gray-500 hover:text-violet-600"
@@ -421,7 +476,7 @@ const Closet: React.FC<Props> = ({ closet, outfits, addItem, addOutfit }) => {
             
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-4">
-               <div className="mb-6">
+               <div className="mb-4">
                  <input 
                     type="text" 
                     placeholder={t('closet.outfit_name_placeholder')}
@@ -429,6 +484,26 @@ const Closet: React.FC<Props> = ({ closet, outfits, addItem, addOutfit }) => {
                     value={newOutfitName}
                     onChange={(e) => setNewOutfitName(e.target.value)}
                  />
+               </div>
+
+               {/* Occasion Selector */}
+               <div className="mb-6">
+                 <h4 className="font-bold text-sm text-gray-500 mb-2 uppercase tracking-wider">{t('closet.occasion')}</h4>
+                 <div className="flex gap-2 flex-wrap">
+                    {OCCASIONS.map(occ => (
+                        <button
+                          key={occ}
+                          onClick={() => setNewOutfitOccasion(occ)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                              newOutfitOccasion === occ 
+                              ? 'bg-violet-600 text-white border-violet-600' 
+                              : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                            {t(`occasion.${occ}`)}
+                        </button>
+                    ))}
+                 </div>
                </div>
 
                <h4 className="font-bold text-sm text-gray-500 mb-3 uppercase tracking-wider">{t('closet.select_items')}</h4>

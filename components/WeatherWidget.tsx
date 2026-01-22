@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { CloudSun, Wind, Droplets } from 'lucide-react';
+import { CloudSun, Sun, Umbrella } from 'lucide-react';
 import { WeatherData } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -22,27 +23,44 @@ const WeatherWidget: React.FC<Props> = ({ data }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-500 to-violet-600 rounded-2xl p-6 text-white shadow-lg mb-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h2 className="text-sm font-medium opacity-90 uppercase tracking-wider mb-1">{data.location}</h2>
-          <div className="flex items-center space-x-2">
-            <span className="text-4xl font-bold">{data.temp}°</span>
-            <span className="text-lg opacity-90">{getConditionText(data.condition)}</span>
-          </div>
-        </div>
-        <CloudSun size={48} className="text-yellow-300" />
+    <div className="bg-gradient-to-r from-indigo-500 to-violet-600 rounded-2xl p-4 text-white shadow-md mb-4 relative overflow-hidden flex items-center justify-between">
+      {/* Decorative Circles (Reduced size) */}
+      <div className="absolute top-0 right-0 -mr-4 -mt-4 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+      <div className="absolute bottom-0 left-0 -ml-4 -mb-4 w-16 h-16 bg-white/10 rounded-full blur-lg"></div>
+
+      {/* Left: Location & Condition */}
+      <div className="relative z-10 flex flex-col justify-center min-w-[30%]">
+        <h2 className="text-xs font-medium opacity-80 uppercase tracking-wider flex items-center gap-1.5 mb-0.5">
+           <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
+           {data.location}
+        </h2>
+        <span className="text-sm font-medium opacity-90 truncate">{getConditionText(data.condition)}</span>
+        <span className="text-[10px] opacity-70">H:{data.temp + 3}° L:{data.temp - 4}°</span>
       </div>
-      
-      <div className="mt-4 flex space-x-6 text-sm opacity-80 border-t border-white/20 pt-3">
-        <div className="flex items-center space-x-1">
-          <Wind size={16} />
-          <span>12 km/h</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <Droplets size={16} />
-          <span>45%</span>
-        </div>
+
+      {/* Center: Big Temp */}
+      <div className="relative z-10 flex items-center justify-center">
+         <span className="text-4xl font-bold tracking-tighter">{data.temp}°</span>
+      </div>
+
+      {/* Right: Stats & Icon */}
+      <div className="relative z-10 flex items-center gap-3">
+         {/* Stats Column */}
+         <div className="flex flex-col gap-1 pr-3 border-r border-white/20">
+            <div className="flex items-center gap-1.5 justify-end">
+                <span className="text-xs font-bold">{data.precipitation}%</span>
+                <Umbrella size={14} className="opacity-80" />
+            </div>
+            <div className="flex items-center gap-1.5 justify-end">
+                <span className="text-xs font-bold">{data.uvIndex}</span>
+                <Sun size={14} className="opacity-80" />
+            </div>
+         </div>
+         
+         {/* Main Icon */}
+         <div className="pl-1">
+            <CloudSun size={32} className="text-yellow-300 drop-shadow-sm" strokeWidth={2} />
+         </div>
       </div>
     </div>
   );

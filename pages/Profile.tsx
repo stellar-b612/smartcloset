@@ -1,22 +1,26 @@
+
 import React, { useState } from 'react';
-import { ClothingItem, Category, User } from '../types';
+import { ClothingItem, Category, User, SavedInspiration, InspirationFolder } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Settings, Heart, RotateCcw, Globe, LogOut, X, ChevronRight, User as UserIcon, Lock, Mail, Edit2, Ruler, Weight, Shirt } from 'lucide-react';
+import { Settings, Heart, RotateCcw, Globe, LogOut, X, ChevronRight, User as UserIcon, Lock, Mail, Edit2, Ruler, Weight, Shirt, Trash2, Sparkles, ShoppingBag, FolderPlus } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 
 interface Props {
   closet: ClothingItem[];
+  savedInspirations?: SavedInspiration[];
+  deleteInspiration?: (id: string) => void;
 }
 
 const COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#6366f1'];
 
-const Profile: React.FC<Props> = ({ closet }) => {
+const Profile: React.FC<Props> = ({ closet, savedInspirations = [], deleteInspiration }) => {
   const { t, language, setLanguage } = useLanguage();
   const { user, login, register, logout, isAuthenticated, updateProfile } = useAuth();
   
   // Settings Modal State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isInspirationsOpen, setIsInspirationsOpen] = useState(false);
   
   // Edit Profile State
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -28,6 +32,9 @@ const Profile: React.FC<Props> = ({ closet }) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Inspiration Modal State
+  const [activeFolder, setActiveFolder] = useState<InspirationFolder>('shopping');
 
   const data = Object.values(Category).map(cat => ({
     name: t(`closet.cat.${cat.toLowerCase()}`),
@@ -70,6 +77,8 @@ const Profile: React.FC<Props> = ({ closet }) => {
       await updateProfile(editForm);
       setIsEditProfileOpen(false);
   };
+
+  const filteredInspirations = savedInspirations.filter(insp => (insp.folder || 'chat') === activeFolder);
 
   // --- Render Login/Register Screen if not authenticated ---
   if (!isAuthenticated) {
@@ -261,14 +270,17 @@ const Profile: React.FC<Props> = ({ closet }) => {
       </div>
 
       <div className="space-y-3">
-        <button className="w-full bg-white p-4 rounded-xl shadow-sm flex items-center justify-between group hover:bg-gray-50">
+        <button 
+            onClick={() => setIsInspirationsOpen(true)}
+            className="w-full bg-white p-4 rounded-xl shadow-sm flex items-center justify-between group hover:bg-gray-50"
+        >
           <div className="flex items-center gap-3">
              <div className="p-2 bg-pink-100 text-pink-500 rounded-lg">
-               <Heart size={20} />
+               <Sparkles size={20} />
              </div>
-             <span className="font-medium">{t('profile.favorites')}</span>
+             <span className="font-medium">{t('profile.favorites')} (Inspirations)</span>
           </div>
-          <span className="text-gray-400">12 items</span>
+          <span className="text-gray-400">{savedInspirations.length} saved</span>
         </button>
 
         <button className="w-full bg-white p-4 rounded-xl shadow-sm flex items-center justify-between group hover:bg-gray-50">
@@ -281,6 +293,71 @@ const Profile: React.FC<Props> = ({ closet }) => {
           <span className="text-gray-400">5 items</span>
         </button>
       </div>
+
+      {/* Inspirations Modal */}
+      {isInspirationsOpen && (
+          <div className="fixed inset-0 z-50 bg-gray-50 animate-in slide-in-from-right duration-200 flex flex-col">
+              <header className="flex justify-between items-center p-4 bg-white shadow-sm shrink-0">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                    <Sparkles size={20} className="text-pink-500" />
+                    {t('profile.inspirations')}
+                </h2>
+                <button 
+                  onClick={() => setIsInspirationsOpen(false)}
+                  className="p-2 bg-gray-100 rounded-full hover:bg-gray-200"
+                >
+                  <X size={20} />
+                </button>
+              </header>
+              
+              {/* Folder Tabs */}
+              <div className="p-4 pb-0 overflow-x-auto">
+                  <div className="flex gap-2">
+                      {(['shopping', 'outfit', 'chat'] as InspirationFolder[]).map(folder => (
+                          <button
+                            key={folder}
+                            onClick={() => setActiveFolder(folder)}
+                            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${
+                                activeFolder === folder 
+                                ? 'bg-black text-white' 
+                                : 'bg-white text-gray-500 border border-gray-200'
+                            }`}
+                          >
+                              {folder === 'shopping' && <ShoppingBag size={14} />}
+                              {folder === 'outfit' && <Heart size={14} />}
+                              {folder === 'chat' && <FolderPlus size={14} />}
+                              {t(`folder.${folder}`)}
+                          </button>
+                      ))}
+                  </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {filteredInspirations.length === 0 ? (
+                      <div className="text-center py-20 text-gray-400">
+                          <p>No items in this folder.</p>
+                      </div>
+                  ) : (
+                      filteredInspirations.map(insp => (
+                          <div key={insp.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative group animate-in fade-in duration-300">
+                              <p className="text-sm text-gray-800 leading-relaxed pr-6 whitespace-pre-line">{insp.content}</p>
+                              <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-50">
+                                  <span className="text-xs text-gray-400">{insp.date}</span>
+                                  {deleteInspiration && (
+                                      <button 
+                                        onClick={() => deleteInspiration(insp.id)}
+                                        className="text-gray-300 hover:text-red-500 p-1"
+                                      >
+                                          <Trash2 size={16} />
+                                      </button>
+                                  )}
+                              </div>
+                          </div>
+                      ))
+                  )}
+              </div>
+          </div>
+      )}
 
       {/* Edit Profile Modal */}
       {isEditProfileOpen && (

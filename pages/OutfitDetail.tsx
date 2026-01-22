@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Calendar, Layers, Edit2, Save, Plus, Minus, Share2, X } from 'lucide-react';
+import { ArrowLeft, Trash2, Calendar, Layers, Edit2, Save, Plus, Minus, Share2, X, Tag } from 'lucide-react';
 import { ClothingItem, SavedOutfit } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -10,6 +11,8 @@ interface Props {
   deleteOutfit: (id: string) => void;
   updateOutfit: (outfit: SavedOutfit) => void;
 }
+
+const OCCASIONS = ['casual', 'work', 'party', 'date', 'sport', 'travel', 'home'];
 
 const OutfitDetail: React.FC<Props> = ({ outfits, closet, deleteOutfit, updateOutfit }) => {
   const { id } = useParams<{ id: string }>();
@@ -101,7 +104,7 @@ const OutfitDetail: React.FC<Props> = ({ outfits, closet, deleteOutfit, updateOu
            {/* Title & Desc Edit */}
            <div className="bg-white p-4 rounded-xl shadow-sm">
                {isEditing ? (
-                   <div className="space-y-3">
+                   <div className="space-y-4">
                        <div>
                            <label className="text-xs text-gray-400 font-bold uppercase">{t('detail.name')}</label>
                            <input 
@@ -110,10 +113,31 @@ const OutfitDetail: React.FC<Props> = ({ outfits, closet, deleteOutfit, updateOu
                               onChange={(e) => setEditedOutfit({...editedOutfit, name: e.target.value})}
                            />
                        </div>
+                       
+                       {/* Occasion Selector (Edit Mode) */}
+                       <div>
+                            <label className="text-xs text-gray-400 font-bold uppercase block mb-2">{t('closet.occasion')}</label>
+                            <div className="flex gap-2 flex-wrap">
+                                {OCCASIONS.map(occ => (
+                                    <button
+                                    key={occ}
+                                    onClick={() => setEditedOutfit({...editedOutfit, occasion: occ})}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                                        editedOutfit.occasion === occ 
+                                        ? 'bg-violet-600 text-white border-violet-600' 
+                                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                                    }`}
+                                    >
+                                        {t(`occasion.${occ}`)}
+                                    </button>
+                                ))}
+                            </div>
+                       </div>
+
                        <div>
                            <label className="text-xs text-gray-400 font-bold uppercase">{t('detail.description')}</label>
                            <textarea 
-                              className="w-full text-sm border border-gray-200 rounded-lg p-2 focus:border-violet-600 outline-none"
+                              className="w-full text-sm border border-gray-200 rounded-lg p-2 focus:border-violet-600 outline-none mt-1"
                               value={editedOutfit.description || ''}
                               onChange={(e) => setEditedOutfit({...editedOutfit, description: e.target.value})}
                               rows={3}
@@ -122,8 +146,16 @@ const OutfitDetail: React.FC<Props> = ({ outfits, closet, deleteOutfit, updateOu
                    </div>
                ) : (
                    <div>
-                       <h1 className="font-bold text-xl">{outfit.name}</h1>
-                       {outfit.description && <p className="text-gray-500 text-sm mt-1">{outfit.description}</p>}
+                       <div className="flex justify-between items-start">
+                           <h1 className="font-bold text-xl">{outfit.name}</h1>
+                           {outfit.occasion && (
+                               <span className="text-xs font-medium bg-violet-50 text-violet-600 px-2 py-1 rounded-md flex items-center gap-1">
+                                   <Tag size={12} />
+                                   {t(`occasion.${outfit.occasion}`)}
+                               </span>
+                           )}
+                       </div>
+                       {outfit.description && <p className="text-gray-500 text-sm mt-2">{outfit.description}</p>}
                    </div>
                )}
            </div>

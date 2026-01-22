@@ -1,4 +1,5 @@
-import { Category, ClothingItem, Season, SavedOutfit } from './types';
+
+import { Category, ClothingItem, Season, SavedOutfit, WeatherData } from './types';
 
 export const INITIAL_CLOSET: ClothingItem[] = [
   {
@@ -85,8 +86,12 @@ export const INITIAL_OUTFITS: SavedOutfit[] = [
   }
 ];
 
-export const WEATHER_MOCK = {
-  temp: 22,
+export const WEATHER_MOCK: WeatherData = {
+  temp: 26,
   condition: 'Partly Cloudy',
-  location: 'Shanghai, CN'
+  location: 'Shanghai, CN',
+  uvIndex: 6,       // Moderate to High
+  precipitation: 20, // 20% chance
+  windSpeed: 12,
+  humidity: 45
 };

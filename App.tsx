@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import BottomNav from './components/BottomNav';
@@ -8,13 +9,14 @@ import Profile from './pages/Profile';
 import ItemDetail from './pages/ItemDetail';
 import OutfitDetail from './pages/OutfitDetail';
 import { INITIAL_CLOSET, INITIAL_OUTFITS, WEATHER_MOCK } from './constants';
-import { ClothingItem, SavedOutfit } from './types';
+import { ClothingItem, SavedOutfit, SavedInspiration } from './types';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 
 const App: React.FC = () => {
   const [closet, setCloset] = useState<ClothingItem[]>(INITIAL_CLOSET);
   const [outfits, setOutfits] = useState<SavedOutfit[]>(INITIAL_OUTFITS);
+  const [savedInspirations, setSavedInspirations] = useState<SavedInspiration[]>([]);
   // In a real app, weather would be fetched via API
   const [weather] = useState(WEATHER_MOCK); 
 
@@ -30,7 +32,6 @@ const App: React.FC = () => {
 
   const handleDeleteItem = (id: string) => {
     setCloset(prev => prev.filter(item => item.id !== id));
-    // Also remove from outfits if necessary, but for now we keep simple
   };
 
   const handleAddOutfit = (outfit: SavedOutfit) => {
@@ -43,6 +44,14 @@ const App: React.FC = () => {
 
   const handleDeleteOutfit = (id: string) => {
     setOutfits(prev => prev.filter(outfit => outfit.id !== id));
+  };
+
+  const handleSaveInspiration = (inspiration: SavedInspiration) => {
+    setSavedInspirations(prev => [inspiration, ...prev]);
+  };
+
+  const handleDeleteInspiration = (id: string) => {
+    setSavedInspirations(prev => prev.filter(insp => insp.id !== id));
   };
 
   return (
@@ -88,8 +97,26 @@ const App: React.FC = () => {
                 } 
               />
 
-              <Route path="/lab" element={<Lab closet={closet} />} />
-              <Route path="/profile" element={<Profile closet={closet} />} />
+              <Route 
+                path="/lab" 
+                element={
+                  <Lab 
+                    closet={closet} 
+                    saveInspiration={handleSaveInspiration}
+                    savedInspirations={savedInspirations}
+                  />
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                    <Profile 
+                        closet={closet} 
+                        savedInspirations={savedInspirations}
+                        deleteInspiration={handleDeleteInspiration}
+                    />
+                } 
+              />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
             <BottomNav />

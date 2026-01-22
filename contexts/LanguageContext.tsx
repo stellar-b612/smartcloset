@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 type Language = 'zh' | 'en';
@@ -28,11 +29,22 @@ const translations = {
     'home.weather.rain': '雨',
     'home.weather.snow': '雪',
     'home.weather.partly_cloudy': '局部多云',
+    'home.weather.uv': '紫外线',
+    'home.weather.precip': '降水概率',
+    'home.weather.chance': '概率',
     'home.stats.height': '身高',
     'home.stats.weight': '体重',
     'home.stats.size': '尺码',
     'home.read_more': '展开全文',
     'home.read_less': '收起',
+
+    // Action / Buy
+    'action.buy_similar': '购买同款',
+    'action.search_taobao': '搜淘宝',
+    'action.search_jd': '搜京东',
+    'action.select_platform': '选择购买平台',
+    'action.cancel': '取消',
+    'action.visit_shop': '访问购买链接',
 
     // Closet Main
     'closet.title': '数字衣橱',
@@ -46,7 +58,7 @@ const translations = {
     'closet.enter_url': '请输入图片链接',
     'closet.add_url': '添加链接',
     'closet.analyzing': 'AI 正在分析...',
-    'closet.analyzing_sub': '智能去底 & 打标中',
+    'closet.analyzing_sub': '智能识别品牌、材质与价格',
     'closet.confirm': '确认并保存',
     'closet.save_outfit': '保存套装',
     'closet.outfit_name_placeholder': '给套装起个名字 (如: 周末野餐)',
@@ -55,7 +67,13 @@ const translations = {
     'closet.no_items': '该分类下暂无衣物',
     'closet.no_outfits': '暂无套装，快去搭配吧！',
     'closet.new_item_manual': '新衣物 (AI未识别)',
-    'closet.cors_hint': '提示: 部分图片可能因安全限制无法进行AI分析，将直接保存。',
+    'closet.cors_hint': '提示: 电商详情页链接无法直接读取图片。',
+    'closet.upload_screenshot': '请上传商品详情页截图',
+    'closet.link_saved': '链接已保存。',
+    'closet.error.page_url': '检测到商品页面链接。为了获得最准确的 AI 分析，链接已保存，请上传一张商品详情页的截图。',
+    'closet.error.image_fetch': '无法读取图片。请尝试复制图片地址或直接上传截图。',
+    'closet.occasion': '场景',
+    'closet.select_occasion': '选择场景',
     
     // Categories
     'closet.cat.all': '全部',
@@ -66,11 +84,23 @@ const translations = {
     'closet.cat.accessory': '配饰',
     'closet.cat.dress': '连衣裙',
 
+    // Occasions
+    'occasion.casual': '休闲',
+    'occasion.work': '职场',
+    'occasion.party': '聚会',
+    'occasion.date': '约会',
+    'occasion.sport': '运动',
+    'occasion.travel': '旅行',
+    'occasion.home': '居家',
+
     // Detail Pages
     'detail.cpw': '单次穿着成本 (CPW)',
     'detail.price': '购入价格',
     'detail.wear_count': '穿着次数',
     'detail.brand': '品牌',
+    'detail.material': '材质',
+    'detail.purchase_date': '购入日期',
+    'detail.shop_link': '购买链接',
     'detail.rating': '喜爱程度',
     'detail.care': '洗护建议',
     'detail.edit': '编辑',
@@ -90,9 +120,18 @@ const translations = {
 
     // Lab
     'lab.title': '风格实验室',
-    'lab.intro': '你好！我是你的专属 AI 搭配师。明天有约会？还是面试？告诉我，我来帮你搭配！',
-    'lab.placeholder': '例如：明天参加婚礼穿什么好...',
-    'lab.thinking': 'AI 正在思考...',
+    'lab.intro': '你好！我是你的专属 AI 搭配师。想试试“刘雯同款”还是“韩系简约”？告诉我，我来帮你从衣橱里找灵感！',
+    'lab.placeholder': '搜同款/风格/搭配 (例: 职场大女主)',
+    'lab.thinking': 'AI 正在翻阅衣橱...',
+    'lab.upload_image': '上传参考图',
+    'lab.save_inspiration': '收藏',
+    'lab.saved': '已收藏',
+    'lab.shop_look': '搜同款',
+    'lab.delete_chat': '清空对话',
+    'lab.select_folder': '选择收藏夹',
+    'folder.shopping': '待购清单',
+    'folder.outfit': '心动搭配',
+    'folder.chat': '对话精选',
 
     // Profile & Auth
     'profile.title': '我的数据',
@@ -100,7 +139,8 @@ const translations = {
     'profile.outfits': '搭配',
     'profile.utilized': '利用率',
     'profile.breakdown': '衣橱分布',
-    'profile.favorites': '我的最爱',
+    'profile.favorites': '我的收藏',
+    'profile.inspirations': '灵感笔记',
     'profile.least_worn': '压箱底',
     'profile.settings': '设置',
     'profile.language': '语言',
@@ -145,11 +185,22 @@ const translations = {
     'home.weather.rain': 'Rain',
     'home.weather.snow': 'Snow',
     'home.weather.partly_cloudy': 'Partly Cloudy',
+    'home.weather.uv': 'UV Index',
+    'home.weather.precip': 'Precipitation',
+    'home.weather.chance': 'Chance',
     'home.stats.height': 'Height',
     'home.stats.weight': 'Weight',
     'home.stats.size': 'Size',
     'home.read_more': 'Read More',
     'home.read_less': 'Show Less',
+
+    // Action
+    'action.buy_similar': 'Buy Similar',
+    'action.search_taobao': 'Search Taobao',
+    'action.search_jd': 'Search JD',
+    'action.select_platform': 'Select Platform',
+    'action.cancel': 'Cancel',
+    'action.visit_shop': 'Visit Shop',
 
     // Closet Main
     'closet.title': 'Digital Closet',
@@ -163,7 +214,7 @@ const translations = {
     'closet.enter_url': 'Enter Image URL',
     'closet.add_url': 'Add URL',
     'closet.analyzing': 'AI is analyzing...',
-    'closet.analyzing_sub': 'Removing background & tagging',
+    'closet.analyzing_sub': 'Identifying brand, material & price',
     'closet.confirm': 'Confirm & Save',
     'closet.save_outfit': 'Save Outfit',
     'closet.outfit_name_placeholder': 'Outfit Name (e.g. Weekend Picnic)',
@@ -172,7 +223,13 @@ const translations = {
     'closet.no_items': 'No items found in this category.',
     'closet.no_outfits': 'No outfits yet. Create one!',
     'closet.new_item_manual': 'New Item (Unanalyzed)',
-    'closet.cors_hint': 'Note: Some images cannot be AI-analyzed due to security restrictions and will be saved directly.',
+    'closet.cors_hint': 'Note: Product page links cannot be read directly.',
+    'closet.upload_screenshot': 'Please upload a screenshot',
+    'closet.link_saved': 'Link saved.',
+    'closet.error.page_url': 'Product page detected. For best AI analysis, the link has been saved, but please upload a screenshot of the page.',
+    'closet.error.image_fetch': 'Could not fetch image. Please use "Copy Image Address" or upload a screenshot.',
+    'closet.occasion': 'Occasion',
+    'closet.select_occasion': 'Select Occasion',
     
     // Categories
     'closet.cat.all': 'All',
@@ -183,11 +240,23 @@ const translations = {
     'closet.cat.accessory': 'Accessory',
     'closet.cat.dress': 'Dress',
 
+    // Occasions
+    'occasion.casual': 'Casual',
+    'occasion.work': 'Work',
+    'occasion.party': 'Party',
+    'occasion.date': 'Date',
+    'occasion.sport': 'Sport',
+    'occasion.travel': 'Travel',
+    'occasion.home': 'Home',
+
     // Detail Pages
     'detail.cpw': 'Cost Per Wear (CPW)',
     'detail.price': 'Price',
     'detail.wear_count': 'Wear Count',
     'detail.brand': 'Brand',
+    'detail.material': 'Material',
+    'detail.purchase_date': 'Purchase Date',
+    'detail.shop_link': 'Shop Link',
     'detail.rating': 'Rating',
     'detail.care': 'Care Instructions',
     'detail.edit': 'Edit',
@@ -207,9 +276,18 @@ const translations = {
 
     // Lab
     'lab.title': 'Style Lab',
-    'lab.intro': "Hi! I'm your AI stylist. Need help with an outfit for a specific event? Ask away!",
-    'lab.placeholder': 'E.g., I have a wedding tomorrow...',
-    'lab.thinking': 'AI is thinking...',
+    'lab.intro': "Hi! I'm your AI stylist. Want to try 'Liu Wen style' or 'Korean Minimalist'? Tell me, and I'll search your closet!",
+    'lab.placeholder': 'Search style/item (e.g. Office Boss)',
+    'lab.thinking': 'AI is searching closet...',
+    'lab.upload_image': 'Upload Ref Image',
+    'lab.save_inspiration': 'Save',
+    'lab.saved': 'Saved',
+    'lab.shop_look': 'Shop Similar',
+    'lab.delete_chat': 'Clear Chat',
+    'lab.select_folder': 'Select Folder',
+    'folder.shopping': 'Shopping List',
+    'folder.outfit': 'Outfit Crushes',
+    'folder.chat': 'Chat Highlights',
 
     // Profile & Auth
     'profile.title': 'My Data',
@@ -217,7 +295,8 @@ const translations = {
     'profile.outfits': 'Outfits',
     'profile.utilized': 'Utilized',
     'profile.breakdown': 'Wardrobe Breakdown',
-    'profile.favorites': 'Favorites',
+    'profile.favorites': 'My Favorites',
+    'profile.inspirations': 'Inspirations',
     'profile.least_worn': 'Least Worn',
     'profile.settings': 'Settings',
     'profile.language': 'Language',
